@@ -1,0 +1,58 @@
+version: '3.8'
+services:
+    crud-react-app:
+        container_name: crud-react-app
+        build:
+            context: .
+            dockerfile: Dockerfile
+        restart: always
+        ports:
+            - 3005:3000
+        networks:
+            - crud-app-network
+
+
+    api:
+        container_name: api
+        build:
+            context: ./api
+            dockerfile: Dockerfile
+        depends_on:
+            - db
+            - crud-react-app
+        volumes:
+            - ./api:/var/www/html/
+        environment: 
+          CRUD-REACT_APP_SERVICE_HOST: http://crud-react-app
+        ports:
+            - 8888:80
+        networks:
+            - crud-app-network
+
+    db:
+        container_name: db
+        image: mysql
+        restart: always
+        environment:
+            MYSQL_ROOT_PASSWORD: 'password'
+            MYSQL_DATABASE: 'react_crud'
+            MYSQL_USER: 'user-crud'
+            MYSQL_PASSWORD: 'password'
+        ports:
+            - "9906:3306"
+        networks:
+            - crud-app-network
+
+    phpmyadmin:
+        image: phpmyadmin/phpmyadmin
+        ports:
+            - '8085:80'
+        restart: always
+        environment:
+            PMA_HOST: db
+        depends_on:
+            - db
+        networks:
+            - crud-app-network
+networks:
+  crud-app-network:
